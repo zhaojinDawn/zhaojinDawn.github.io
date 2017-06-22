@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>js简单的五子棋</title>
+	<meta name=”viewport” content=”width=device-width, initial-scale=1″ />
+	<link rel="stylesheet" href="http://div.justjavac.com/css/reset.css">
+<style type="text/css">
+body {
+    margin:50px;	
+    text-align:center;
+    background-color:#92CEA4;
+	}
+h1{
+    color: rgba(23, 22, 22, 0.57);
+	font-weight:bold;
+	line-height:30px;
+    font-size:20px;
+	font-family:Arial,times;
+	}
+#content{
+    width:800px;
+	height:800px;
+    border:1px solid #000;
+	margin:10px auto;
+    padding:0;
+    text-align:left;	
+	overflow: hidden;
+	}	
+
+.small{
+     width:40px;
+	 height:40px;
+	 border:0px solid #000;
+	 float:left;
+	 position:relative;
+	 display:inline-block;
+	 }
+.small:before{
+     left:0;
+	 position: absolute;	
+     top:20px;		
+     width:40px;	
+     height:1px;	
+     background:#000;		
+     content:"";	
+     z-index:-1;
+	 }	
+.small:after{
+     position: absolute;	
+     top:0px;	
+     left:20px;			
+	 width:1px;		
+     height:40px;	
+     background:#000;			
+     content:"";
+	 z-index:-1;
+	 }	
+.small:hover:after, .small:hover:before {
+	 background-color: yellow;
+     }
+.small-white{
+	 border-radius:20px;
+     background:radial-gradient(10px 10px at 10px 10px,#fff,#e2e2e2);
+     box-shadow:2px 2px 4px rgba(0,0,0,0.3);
+	}
+.small-black{
+	 border-radius:20px;
+     background:radial-gradient(10px 10px at 10px 10px,#fff,#333);
+     box-shadow:2px 2px 4px rgba(0,0,0,0.4);
+	}	  
+</style>
+
+</head>
+<body>
+<h1>五子棋</h1>	
+<div id="content">
+</div>
+<script>
+var arr=[];
+var isBlackFirst=true;
+var isGameOver=false;
+window.onload=function(){
+     //画棋盘
+     var element=document.getElementById("content");  //找到id为content的盒子，现在是个空盒子
+     
+	 for(var n=0;n<400;n++){   //这个棋盘可以下400个棋子
+	     var y=Math.floor(n/20),x=n%20;   //每个棋子都对应一个位置（x,y）,可以命名一个二维数组
+		 //需注意x为行，y为列；
+	     arr[x]=[];
+		 arr[x][y]=0;
+	    //画棋盘网格
+         var child=document.createElement("div"); //每个棋子位置是一个小盒子，
+           //给小盒子添加样式，用伪元素before和after添加横竖线
+			 child.className="small";  
+             element.appendChild(child);	//为大盒子添加小盒子
+			(function(child,n){
+				child.onclick=function(){  
+					var y=Math.floor(n/20),x=n%20;	
+                     //判断游戏是否结束					
+				    if(isGameOver)return;//如果游戏结束就直接返回；
+                  	 //判断点击位置是否已落子
+					 //没有落子：arr[x][y]=0;落黑子：arr[x][y]=1;落白子：arr[x][y]=2; 
+					if(arr[x][y]==1||arr[x][y]==2){   
+	                      alert("不能重复落子");
+						  return;	//已落子直接返回；
+					 }
+					 //判断是否是黑子下，是加黑子，不是就加白子
+					if(isBlackFirst){
+						  arr[x][y]=1;
+						  child.className=child.className+" small-black";
+					}else{
+						  arr[x][y]=2;
+						  child.className=child.className+" small-white";
+					}
+					//用函数checkSuccess(x,y)判断是否赢了
+					if(checkSuccess(x,y)){
+					  var str=isBlackFirst?"黑子赢":"白子赢";   //是黑子赢就弹窗黑子赢，不是就弹白子赢
+					  alert(str);
+					  isGameOver=true;
+		             
+					}
+					isBlackFirst=!isBlackFirst;//取反；如果是真就变成假；
+			}})(child,n);
+	}
+  }
+  function checkSuccess(x,y){
+      var isSuccess=false;
+      var  cur_play=isBlackFirst?1:2;
+      //四种情况  横、竖、左斜、右斜
+	  //一：判横；
+	  var  leftNum=1;
+	  var  rightNum=0;
+	  var isLeft=true;
+      for(var n=1;n<=5;n++){
+	     
+			 if(isLeft){    //向左找
+				 if(x-n>=0&&arr[x-n][y]==cur_play){  //向左找没有找到边界，并且向左找到的颜色与自己相同；
+					 leftNum++;   //左边的棋子数加1
+				 }else{    //否则向右找
+					isLeft=false;
+				 }
+			 }else{   //如果isLeft=false,就向右找
+				 if(x+(n-leftNum)<=19&&arr[x+(n-leftNum)][y]==cur_play){  //向右找没到边界，并且颜色一样；
+						 rightNum++;   //右边的棋子数加1
+					 }else{    //如果向右没有找到，跳出循环
+						  break;
+					 }
+			 }
+		    if(leftNum+rightNum==5){   //如果向左找到的棋子数加上向右找到的棋子数等于5，说明该颜色游戏赢了
+			   isSuccess=true;
+			   return isSuccess; //直接返回游戏结果，后面的情况不用再判断  
+			}
+	  }
+	  //二：判竖(判断方法同上)；
+	  var  topNum=1;
+	  var  bottomNum=0;
+	  
+	  var isTop=true;
+      for(var n=1;n<=5;n++){
+		 
+     		if(isTop){
+				 if(y-n>=0&&arr[x][y-n]==cur_play){
+					 topNum++;
+				 }else{
+					isTop=false;
+				 }
+			 }else{
+				 if(y+(n-topNum)<=19&&arr[x][y+(n-topNum)]==cur_play){
+						 bottomNum++;
+					 }else{
+						  break;
+					 }
+			 }
+		    if(topNum+bottomNum==5){
+			   isSuccess=true;
+			   return isSuccess;
+			}
+	  }
+	  //三：判左斜(判断方法同上)；
+	  var  lTopNum=1;
+	  var  rBottomNum=0;
+	  
+	  var islTop=true;
+      for(var n=1;n<=5;n++){
+			 if(islTop){
+				 if(x-n>=0&&y-n>=0&&arr[x-n][y-n]==cur_play){
+					 lTopNum++;
+				 }else{
+					islTop=false;
+				 }
+			 }else{
+				 if(x+(n-lTopNum)<=19&&y+(n-lTopNum)<=19
+				 &&arr[x+(n-lTopNum)][y+(n-lTopNum)]==cur_play){
+						 rBottomNum++;
+					 }else{
+						  break;
+					 }
+			 }
+		    if(lTopNum+rBottomNum==5){
+			   isSuccess=true;
+			   return isSuccess; 
+			}
+	  }
+	  //四：判右斜(判断方法同上)；
+	  var  rTopNum=1;
+	  var  lBottomNum=0;
+	  
+	  var isrTop=true;
+      for(var n=1;n<=5;n++){
+			 if(isrTop){
+				 if(x+n<=19&&y-n>=0&&arr[x+n][y-n]==cur_play){
+					 rTopNum++;
+				 }else{
+					isrTop=false;
+				 }
+			 }else{
+				 if(x-(n-rTopNum)>=0&&y+(n-rTopNum)<=19
+				 &&arr[x-(n-rTopNum)][y+(n-rTopNum)]==cur_play){
+						 lBottomNum++;
+					 }else{
+						  break;
+					 }
+			 }
+		    if(rTopNum+lBottomNum==5){
+			   isSuccess=true;
+			   return isSuccess;
+			}
+	  }
+}
+  
+</script>
+</body>
+</html>	
